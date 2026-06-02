@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Generator</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxkZWZzPgogICAgICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmFyY29kZV9ncmFkaWVudCIgeDE9IjE0IiB5MT0iMTQiIHgyPSI1MCIgeTI9IjUwIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CiAgICAgICAgICAgIDxzdG9wIHN0b3AtY29sb3I9IiMwMGE4ZTgiLz4KICAgICAgICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMDBjODUzIi8+CiAgICAgICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDwvZGVmcz4KICAgIDxyZWN0IHg9IjIiIHk9IjIiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcng9IjE0IiBmaWxsPSIjMGQxMTE3IiBzdHJva2U9IiMzMDM2M2QiIHN0cm9rZS13aWR0aD0iMiIvPgogICAgPGcgZmlsbD0idXJsKCNiYXJjb2RlX2dyYWRpZW50KSI+CiAgICAgICAgPHJlY3QgeD0iMTUiIHk9IjE4IiB3aWR0aD0iNCIgaGVpZ2h0PSIyOCIgcng9IjEiLz4KICAgICAgICA8cmVjdCB4PSIyMiIgeT0iMTgiIHdpZHRoPSIyIiBoZWlnaHQ9IjI4IiByeD0iMSIvPgogICAgICAgIDxyZWN0IHg9IjI3IiB5PSIxOCIgd2lkdGg9IjYiIGhlaWdodD0iMjgiIHJ4PSIxIi8+CiAgICAgICAgPHJlY3QgeD0iMzYiIHk9IjE4IiB3aWR0aD0iMyIgaGVpZ2h0PSIyOCIgcng9IjEiLz4KICAgICAgICA8cmVjdCB4PSI0MiIgeT0iMTgiIHdpZHRoPSI3IiBoZWlnaHQ9IjI4IiByeD0iMSIvPgogICAgPC9nPgo8L3N2Zz4=">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #00a8e8;
+            --primary-dark: #0077b6;
+            --success-color: #00c853;
+            --warning-color: #ffc107;
+            --danger-color: #ff5252;
+            --bg-dark: #0d1117;
+            --bg-card: #161b22;
+            --bg-input: #21262d;
+            --bg-hover: #30363d;
+            --border-color: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+            --cp-font-main: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif !important;
+            --cp-font-mono: "Consolas", monospace;
+            --sidebar-width: 380px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        .preload * { transition: none !important; }
+
+        body {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            font-family: var(--cp-font-main);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-card); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            width: var(--sidebar-width);
+            background: var(--bg-card);
+            border-right: 1px solid var(--border-color);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            gap: 12px;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header i { font-size: 1.8rem; color: var(--primary-color); }
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--success-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .settings-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .form-group { margin-bottom: 24px; }
+
+        .label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .label-row i { margin-right: 8px; color: var(--primary-color); }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .switch-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .slide-switch {
+            position: relative;
+            display: flex;
+            width: 140px;
+            height: 36px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            cursor: pointer;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        .slide-switch .switch-option {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-secondary);
+            z-index: 2;
+            transition: color 0.25s ease;
+        }
+
+        .slide-switch .switch-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 65px;
+            height: 28px;
+            background: var(--primary-color);
+            border-radius: 16px;
+            z-index: 1;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .slide-switch.active .switch-slider { transform: translateX(67px); }
+        .slide-switch.active .opt-right { color: #ffffff; }
+        .slide-switch:not(.active) .opt-left { color: #ffffff; }
+        #modeToggle .switch-slider { background: linear-gradient(135deg, var(--primary-color), var(--success-color)); }
+
+        .value-badge {
+            padding: 2px 8px;
+            background: var(--primary-color);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border-radius: 10px;
+        }
+
+        .count-badge {
+            margin-left: 5px;
+            color: var(--success-color);
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+
+        .textarea-container { position: relative; width: 100%; }
+
+        textarea.form-control, input.form-control, select.form-control {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: var(--cp-font-mono);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        select.form-control { height: 42px; font-family: var(--cp-font-main); cursor: pointer; }
+
+        textarea.form-control {
+            height: 250px;
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+            resize: vertical;
+        }
+
+        .data-textarea-bgtext {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            left: 14px;
+            z-index: 2;
+            display: block;
+            color: #565c64;
+            font-size: 0.85rem;
+            font-family: var(--cp-font-main);
+            line-height: 1.6;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        textarea.form-control:focus, input.form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.2);
+        }
+
+        .textarea-toolbar {
+            display: flex;
+            overflow: hidden;
+            gap: 1px;
+            padding-top: 1px;
+            background: var(--border-color);
+            border-bottom-right-radius: 10px;
+            border-bottom-left-radius: 10px;
+        }
+
+        .tool-btn {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px;
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+        #btnImport:hover { color: var(--primary-color); }
+        #btnPaste:hover { color: var(--success-color); }
+        #btnClear:hover { color: var(--danger-color); background: rgba(255, 82, 82, 0.1); }
+
+        .validation-warning {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+            padding: 10px 12px;
+            color: #ffcccc;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            background: rgba(255, 82, 82, 0.15);
+            border-left: 3px solid var(--danger-color);
+            border-radius: 4px;
+        }
+        .validation-warning i { font-size: 1rem; flex-shrink: 0; }
+
+        input[type=range] { width: 100%; margin: 10px 0; background: transparent; -webkit-appearance: none; }
+        input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; margin-top: -7px; background: var(--primary-color); border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: pointer; -webkit-appearance: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; }
+
+        .expand-btn {
+            width: 100%; padding: 12px; background: var(--bg-input); border: 1px dashed var(--border-color);
+            border-radius: 8px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center;
+            justify-content: center; gap: 8px; transition: all 0.3s ease; margin-bottom: 20px; font-weight: 500;
+        }
+        .expand-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .expand-btn i { transition: transform 0.3s ease; }
+        .expand-btn.expanded i { transform: rotate(180deg); }
+
+        .advanced-settings { display: none; animation: slideDown 0.3s ease; }
+        .advanced-settings.show { display: block; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .settings-group { background: rgba(255, 255, 255, 0.03); border-radius: 10px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--border-color); }
+        .settings-group-title { font-size: 0.85rem; font-weight: 600; color: var(--primary-color); margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+        .control-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .control-row:last-child { margin-bottom: 0; }
+
+        .btn-group-toggle { display: flex; gap: 4px; background: var(--bg-input); padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .btn-toggle-small { padding: 6px 12px; background: transparent; border: none; border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 0.85rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-toggle-small:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+        .btn-toggle-small.active { background: var(--primary-color); color: white; box-shadow: 0 2px 5px rgba(0, 168, 232, 0.3); }
+
+        .btn-toggle { width: 46px; height: 42px; display: flex; align-items: center; justify-content: center; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-secondary); cursor: pointer; font-weight: 700; font-size: 1.1rem; transition: all 0.2s; flex-shrink: 0; }
+        .btn-toggle:hover { border-color: var(--primary-color); color: var(--text-primary); }
+        .btn-toggle.active { background: var(--primary-color); border-color: var(--primary-color); color: white; box-shadow: 0 0 10px rgba(0, 168, 232, 0.3); }
+
+        .switch { position: relative; display: inline-flex; width: 44px; height: 24px; vertical-align: middle; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-color); transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .footer-actions { display: flex; align-items: center; justify-content: space-between; gap: 5px; padding: 20px 24px; background: var(--bg-card); border-top: 1px solid var(--border-color); flex-shrink: 0; box-sizing: border-box; }
+        #btnResetSettings { pointer-events: auto; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; font-size: 15px; font-weight: 600; border-radius: 6px; outline: none; cursor: pointer; transition: all 0.2s; width: auto; background: linear-gradient(135deg, var(--danger-color), #d32f2f); color: white; border: none; box-shadow: 0 4px 12px rgba(255, 82, 82, 0.3); box-sizing: border-box; font-family: var(--cp-font-main); }
+        #btnResetSettings:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 82, 82, 0.4); }
+        .btn-primary { pointer-events: auto; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; font-size: 15px; font-weight: 600; border-radius: 6px; outline: none; cursor: pointer; transition: all 0.2s; flex: 1; background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: white; border: none; box-shadow: 0 4px 12px rgba(0, 168, 232, 0.3); box-sizing: border-box; font-family: var(--cp-font-main); }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 168, 232, 0.4); }
+        .btn-primary:disabled { background: var(--bg-input); background-image: none; color: var(--text-secondary); box-shadow: none; cursor: not-allowed; }
+
+        .preview-area { display: flex; flex: 1; align-items: flex-start; justify-content: center; padding: 40px; background: #0d1117; background-image: linear-gradient(rgba(48, 54, 61, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(48, 54, 61, 0.3) 1px, transparent 1px); background-size: 20px 20px; overflow: auto; }
+        .preview-content { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%; }
+
+        .empty-state { margin-top: 100px; color: #8b949e; text-align: center; animation: breathe 3s infinite ease-in-out; }
+        .empty-state i { display: block; margin-bottom: 25px; font-size: 5rem; opacity: 0.5; }
+        .empty-state p { font-size: 1.5rem; font-weight: 300; letter-spacing: 1px; }
+
+        @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.02); opacity: 1; } }
+
+        .a4-page { width: 297mm; height: 210mm; background: white; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; padding: 20px; zoom: 0.6; }
+        .a4-page svg { max-width: 100%; height: auto; display: block; overflow: visible; }
+        .additional-text { font-family: 'Inter', 'Noto Sans TC', sans-serif; color: #000; text-align: center; line-height: 1.2; width: 100%; }
+        .page-badge { position: absolute; top: -30px; left: 0; background: var(--bg-input); color: var(--text-secondary); padding: 4px 12px; border-radius: 4px; font-size: 14px; border: 1px solid var(--border-color); }
+
+        .label-box { display: flex; flex-direction: column; width: 50mm; height: 30mm; box-sizing: border-box; border: 2px solid #000; background-color: #ffffff !important; font-family: "Malgun Gothic", Arial, sans-serif !important; overflow: hidden; }
+        .label-top { display: flex; align-items: center; justify-content: center; height: 21%; font-size: 14pt; font-weight: bold; color: #000000 !important; background-color: #ffffff !important; }
+        .label-barcode { display: flex; align-items: center; justify-content: center; height: 48%; padding: 2px 2mm; background-color: #ffffff !important; }
+        .label-barcode svg { display: block; max-width: 100%; max-height: 100%; }
+        .label-bottom { display: flex; align-items: center; justify-content: center; height: 31%; font-size: 20pt; font-weight: bold; letter-spacing: 1px; color: #ffffff !important; background-color: #000000 !important; font-family: "Cambria", serif !important; }
+
+        @media print {
+            body { display: block; height: auto; margin: 0; overflow: visible; background: white; }
+            .sidebar { display: none !important; }
+            .preview-area { display: block; padding: 0; overflow: visible; background: none; }
+            .preview-content { display: block; gap: 0; margin: 0; padding: 0; }
+        }
+    </style>
+</head>
+<body class="preload">
+
+    <aside class="sidebar">
+        <div class="header">
+            <i class="fas fa-barcode"></i>
+            <h1>Barcode Generator</h1>
+        </div>
+
+        <div class="settings-content">
+
+            <div class="switch-container" style="background: rgba(0, 168, 232, 0.05); border-color: var(--primary-color);">
+                <span class="switch-title"><i class="fas fa-exchange-alt" style="color: var(--primary-color); margin-right: 8px;"></i>列印模式</span>
+                <div id="modeToggle" class="slide-switch">
+                    <div class="switch-slider"></div>
+                    <div class="switch-option opt-left">標示條碼</div>
+                    <div class="switch-option opt-right">員工條碼</div>
+                </div>
+            </div>
+
+            <div id="coucodeSpecificSettings" style="display: none;">
+                <div class="switch-container">
+                    <span class="switch-title"><i class="fas fa-user-cog" style="color: var(--primary-color); margin-right: 8px;"></i>人員類型</span>
+                    <div id="workerToggle" class="slide-switch">
+                        <div class="switch-slider"></div>
+                        <div class="switch-option opt-left">正職</div>
+                        <div class="switch-option opt-right">臨工</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="label-row">
+                        <span><i class="fas fa-heading"></i> 自訂前綴文字</span>
+                    </div>
+                    <input type="text" id="prefixInput" class="form-control" value="RFC" placeholder="例如：RFC, RFC TEMP ..." style="font-family: 'Inter', 'Noto Sans TC', sans-serif;">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <div class="label-row">
+                    <span>
+                        <i class="fas fa-keyboard"></i> 輸入條碼資料
+                        <span id="lineCount" class="count-badge">0 筆資料已輸入</span>
+                    </span>
+                </div>
+
+                <div class="textarea-container">
+                    <div id="dataInputPlaceholder" class="data-textarea-bgtext"></div>
+                    <textarea id="dataInput" class="form-control"></textarea>
+
+                    <div class="textarea-toolbar">
+                        <button id="btnImport" class="tool-btn" title="匯入 Excel/CSV/TXT">
+                            <i class="fas fa-file-import"></i> 匯入資料
+                        </button>
+                        <button id="btnPaste" class="tool-btn" title="貼上剪貼簿內容">
+                            <i class="fas fa-paste"></i> 貼上資料
+                        </button>
+                        <button id="btnClear" class="tool-btn" title="清空資料">
+                            <i class="fas fa-trash-alt"></i> 清空資料
+                        </button>
+                    </div>
+                    <input type="file" id="fileInput" accept=".txt,.csv,.xlsx,.xls" style="display: none;">
+                </div>
+                <div id="validationWarning" class="validation-warning"></div>
+            </div>
+
+            <div class="form-group">
+                <div class="label-row">
+                    <span><i class="fas fa-text-width"></i> 條碼粗細 (密度)</span>
+                    <span id="val-width" class="value-badge">4 px</span>
+                </div>
+                <input type="range" id="barWidth" value="4" min="1" max="10" step="1">
+            </div>
+
+            <div class="form-group">
+                <div class="label-row">
+                    <span><i class="fas fa-arrows-alt-v"></i> 條碼高度</span>
+                    <span id="val-height" class="value-badge">250 px</span>
+                </div>
+                <input type="range" id="barHeight" value="250" min="50" max="400" step="10">
+            </div>
+
+            <div id="standardSpecificSettings">
+                <div class="expand-btn" id="expandBtn" onclick="toggleAdvanced()">
+                    <i class="fas fa-chevron-down"></i>
+                    <span>更多設定</span>
+                </div>
+
+                <div class="advanced-settings" id="advancedSettings">
+                    <div class="settings-group">
+                        <div class="settings-group-title">
+                            <div class="title-left"><i class="fas fa-font"></i> 條碼文字設定</div>
+                        </div>
+
+                        <div class="label-row">
+                            <span>文字大小</span>
+                            <span id="val-fontsize" class="value-badge">150 px</span>
+                        </div>
+                        <input type="range" id="fontSize" value="150" min="20" max="300" step="5">
+
+                        <div class="label-row" style="margin-top:15px;">
+                            <span>文字距離</span>
+                            <span id="val-textmargin" class="value-badge">10 px</span>
+                        </div>
+                        <input type="range" id="textMargin" value="10" min="0" max="50" step="1">
+
+                        <div class="label-row" style="margin-top:15px;"><span>字體與樣式</span></div>
+                        <div class="control-row">
+                            <select id="fontSelect" class="form-control">
+                                <option value="Noto Sans TC">思源黑體 (Noto Sans TC)</option>
+                                <option value="Microsoft JhengHei">微軟正黑體 (JhengHei)</option>
+                                <option value="PingFang TC">蘋方黑體 (PingFang)</option>
+                                <option value="PMingLiU">新細明體 (PMingLiU)</option>
+                                <option value="monospace">等寬字體 (Monospace)</option>
+                            </select>
+                            <button id="btnBold" class="btn-toggle active" title="粗體">B</button>
+                            <button id="btnItalic" class="btn-toggle" title="斜體">/</button>
+                            <button id="btnShowText" class="btn-toggle active" title="顯示文字"><i class="fas fa-eye"></i></button>
+                        </div>
+
+                        <div class="label-row" style="margin-top:15px;"><span>位置 / 對齊</span></div>
+                        <div class="control-row">
+                            <div class="btn-group-toggle">
+                                <button id="posTop" class="btn-toggle-small">頂部</button>
+                                <button id="posBottom" class="btn-toggle-small active">底部</button>
+                            </div>
+                            <div style="width:1px; height:20px; background:var(--border-color); margin:0 5px;"></div>
+                            <div class="btn-group-toggle">
+                                <button id="alignLeft" class="btn-toggle-small"><i class="fas fa-align-left"></i></button>
+                                <button id="alignCenter" class="btn-toggle-small active"><i class="fas fa-align-center"></i></button>
+                                <button id="alignRight" class="btn-toggle-small"><i class="fas fa-align-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <div class="settings-group-title">
+                            <div class="title-left"><i class="fas fa-plus-circle"></i> 附加文字</div>
+                            <label class="switch">
+                                <input type="checkbox" id="addTextEnable">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="control-row">
+                            <input type="text" id="addTextInput" class="form-control" placeholder="輸入附加文字 ...（留空則讀取輸入框的每行選填文字）">
+                        </div>
+
+                        <div class="label-row"><span>字體</span></div>
+                        <div class="control-row">
+                            <select id="addTextFont" class="form-control">
+                                <option value="Noto Sans TC">思源黑體 (Noto Sans TC)</option>
+                                <option value="Microsoft JhengHei">微軟正黑體 (JhengHei)</option>
+                                <option value="PingFang TC">蘋方黑體 (PingFang)</option>
+                                <option value="PMingLiU">新細明體 (PMingLiU)</option>
+                                <option value="monospace">等寬字體 (Monospace)</option>
+                            </select>
+                        </div>
+
+                        <div class="label-row">
+                            <span>大小</span>
+                            <span id="val-addTextSize" class="value-badge">100 px</span>
+                        </div>
+                        <input type="range" id="addTextSize" value="100" min="10" max="200" step="2">
+
+                        <div class="label-row" style="margin-top:15px;"><span>位置 / 距離</span></div>
+                        <div class="control-row">
+                            <div class="btn-group-toggle">
+                                <button id="addPosTop" class="btn-toggle-small active">頂部</button>
+                                <button id="addPosBottom" class="btn-toggle-small">底部</button>
+                            </div>
+                            <div style="width:1px; height:20px; background:var(--border-color); margin:0 5px;"></div>
+                             <div class="label-row" style="flex:1; margin-bottom:0; justify-content: flex-end; gap:10px;">
+                                <span style="font-size:0.8rem;">距離:</span>
+                                <span id="val-addTextDist" class="value-badge">20 px</span>
+                            </div>
+                        </div>
+                        <input type="range" id="addTextDist" value="20" min="0" max="100" step="5">
+
+                        <div class="label-row" style="margin-top:15px;"><span>樣式</span></div>
+                        <div class="control-row">
+                            <button id="btnAddBold" class="btn-toggle active" title="粗體">B</button>
+                            <button id="btnAddItalic" class="btn-toggle" title="斜體">/</button>
+                            <button id="btnAddUnderline" class="btn-toggle" title="底線"><i class="fas fa-underline"></i></button>
+                            <button id="btnAddStrike" class="btn-toggle" title="刪除線"><i class="fas fa-strikethrough"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="footer-actions">
+            <button id="btnResetSettings">
+                <i class="fas fa-undo"></i>
+            </button>
+            <button id="btnPrint" class="btn-primary" onclick="window.print()" disabled>
+                <i class="fas fa-print"></i> 列印所有標籤
+            </button>
+        </div>
+    </aside>
+
+    <main class="preview-area">
+        <div id="preview-content" class="preview-content">
+        </div>
+    </main>
+
+    <script>
+        const HINT_STANDARD = `請將條碼資料貼上到這裡（最多 500 筆）<br><br>格式支援：<br>1. 僅輸入條碼本體<br>2. 條碼 + 獨立選填文字（空格分隔）<br><br>※ 開啟下方 「附加文字」 且側邊欄欄位留空時，系統將自動擷取本處每行的選填附加文字。<br><br>※ 條碼內容本身請勿內含空格。`;
+        const HINT_COUCODE = `請將條碼資料貼上到這裡（最多 500 筆）<br><br>格式支援：<br>1. 僅輸入條碼本體<br>2. 條碼 + 獨立選填文字（空格分隔）<br><br>※ 條碼內容本身請勿內含空格。`;
+
+        let currentMode = 'standard';
+        let cachedData = {
+            standard: { text: "", width: 4, height: 250 },
+            coucode: { text: "", width: 1.3, height: 40 }
+        };
+
+        const els = {
+            modeToggle: document.getElementById('modeToggle'),
+            workerToggle: document.getElementById('workerToggle'),
+            coucodeSettings: document.getElementById('coucodeSpecificSettings'),
+            standardSettings: document.getElementById('standardSpecificSettings'),
+
+            data: document.getElementById('dataInput'),
+            dataPlaceholder: document.getElementById('dataInputPlaceholder'),
+            prefix: document.getElementById('prefixInput'),
+
+            btnImport: document.getElementById('btnImport'),
+            btnPaste: document.getElementById('btnPaste'),
+            btnClear: document.getElementById('btnClear'),
+            fileInput: document.getElementById('fileInput'),
+            btnPrint: document.getElementById('btnPrint'),
+
+            width: document.getElementById('barWidth'),
+            height: document.getElementById('barHeight'),
+            fSize: document.getElementById('fontSize'),
+            textMargin: document.getElementById('textMargin'),
+            font: document.getElementById('fontSelect'),
+
+            btnBold: document.getElementById('btnBold'),
+            btnItalic: document.getElementById('btnItalic'),
+            btnShowText: document.getElementById('btnShowText'),
+            posTop: document.getElementById('posTop'),
+            posBottom: document.getElementById('posBottom'),
+            alignLeft: document.getElementById('alignLeft'),
+            alignCenter: document.getElementById('alignCenter'),
+            alignRight: document.getElementById('alignRight'),
+
+            expandBtn: document.getElementById('expandBtn'),
+            advancedSettings: document.getElementById('advancedSettings'),
+            btnResetSettings: document.getElementById('btnResetSettings'),
+
+            addTextEnable: document.getElementById('addTextEnable'),
+            addTextInput: document.getElementById('addTextInput'),
+            addTextFont: document.getElementById('addTextFont'),
+            addTextSize: document.getElementById('addTextSize'),
+            addTextDist: document.getElementById('addTextDist'),
+            addPosTop: document.getElementById('addPosTop'),
+            addPosBottom: document.getElementById('addPosBottom'),
+            btnAddBold: document.getElementById('btnAddBold'),
+            btnAddItalic: document.getElementById('btnAddItalic'),
+            btnAddUnderline: document.getElementById('btnAddUnderline'),
+            btnAddStrike: document.getElementById('btnAddStrike'),
+
+            container: document.getElementById('preview-content'),
+            lineCount: document.getElementById('lineCount'),
+            validationWarning: document.getElementById('validationWarning'),
+
+            displays: {
+                width: document.getElementById('val-width'),
+                height: document.getElementById('val-height'),
+                fSize: document.getElementById('val-fontsize'),
+                textMargin: document.getElementById('val-textmargin'),
+                addTextSize: document.getElementById('val-addTextSize'),
+                addTextDist: document.getElementById('val-addTextDist')
+            }
+        };
+
+        let state = {
+            isBold: true, isItalic: false, showText: true,
+            textPosition: 'bottom', textAlign: 'center',
+            addPos: 'top', addIsBold: true, addIsItalic: false,
+            addIsUnderline: false, addIsStrike: false
+        };
+
+        window.onload = function() {
+            initPrintStyle();
+            loadSavedSettings();
+
+            setTimeout(() => {
+                document.body.classList.remove('preload');
+                els.data.style.transition = 'all 0.3s ease';
+            }, 100);
+
+            [els.data, els.prefix, els.width, els.height, els.fSize, els.textMargin, els.font,
+             els.addTextInput, els.addTextFont, els.addTextSize, els.addTextDist].forEach(el => {
+                el.addEventListener('input', () => {
+                    updateAll();
+                    saveSettings();
+                });
+            });
+
+            els.modeToggle.addEventListener('click', () => {
+                cachedData[currentMode].text = els.data.value;
+                cachedData[currentMode].width = els.width.value;
+                cachedData[currentMode].height = els.height.value;
+
+                els.modeToggle.classList.toggle('active');
+                currentMode = els.modeToggle.classList.contains('active') ? 'coucode' : 'standard';
+
+                if (currentMode === 'coucode') {
+                    els.coucodeSettings.style.display = 'block';
+                    els.standardSettings.style.display = 'none';
+                    els.dataPlaceholder.innerHTML = HINT_COUCODE;
+
+                    els.width.min = 1.0; els.width.max = 3.0; els.width.step = 0.1;
+                    els.height.min = 20; els.height.max = 100; els.height.step = 5;
+                    els.data.style.height = '180px';
+                } else {
+                    els.coucodeSettings.style.display = 'none';
+                    els.standardSettings.style.display = 'block';
+                    els.dataPlaceholder.innerHTML = HINT_STANDARD;
+
+                    els.width.min = 1; els.width.max = 10; els.width.step = 1;
+                    els.height.min = 50; els.height.max = 400; els.height.step = 10;
+                    els.data.style.height = '250px';
+                }
+
+                els.data.value = cachedData[currentMode].text;
+                els.width.value = cachedData[currentMode].width;
+                els.height.value = cachedData[currentMode].height;
+
+                togglePlaceholder();
+                updatePrintCSS();
+                updateAll();
+                saveSettings();
+            });
+
+            els.workerToggle.addEventListener('click', () => {
+                els.workerToggle.classList.toggle('active');
+                els.prefix.value = els.workerToggle.classList.contains('active') ? "RFC TEMP" : "RFC";
+                updateAll();
+                saveSettings();
+            });
+
+            els.data.addEventListener('input', togglePlaceholder);
+            els.btnImport.addEventListener('click', () => els.fileInput.click());
+            els.btnPaste.addEventListener('click', pasteData);
+            els.btnClear.addEventListener('click', clearData);
+            els.fileInput.addEventListener('change', handleFileUpload);
+            els.addTextEnable.addEventListener('change', () => { updateAll(); saveSettings(); });
+
+            // 綁定重置設定按鈕功能
+            els.btnResetSettings.addEventListener('click', resetSettings);
+
+            bindToggle(els.btnBold, 'isBold');
+            bindToggle(els.btnItalic, 'isItalic');
+            bindToggle(els.btnShowText, 'showText');
+            bindGroup(els.posTop, 'textPosition', 'top', [els.posTop, els.posBottom]);
+            bindGroup(els.posBottom, 'textPosition', 'bottom', [els.posTop, els.posBottom]);
+            bindGroup(els.alignLeft, 'textAlign', 'left', [els.alignLeft, els.alignCenter, els.alignRight]);
+            bindGroup(els.alignCenter, 'textAlign', 'center', [els.alignLeft, els.alignCenter, els.alignRight]);
+            bindGroup(els.alignRight, 'textAlign', 'right', [els.alignLeft, els.alignCenter, els.alignRight]);
+            bindGroup(els.addPosTop, 'addPos', 'top', [els.addPosTop, els.addPosBottom]);
+            bindGroup(els.addPosBottom, 'addPos', 'bottom', [els.addPosTop, els.addPosBottom]);
+            bindToggle(els.btnAddBold, 'addIsBold');
+            bindToggle(els.btnAddItalic, 'addIsItalic');
+            bindToggle(els.btnAddUnderline, 'addIsUnderline');
+            bindToggle(els.btnAddStrike, 'addIsStrike');
+
+            togglePlaceholder();
+            updatePrintCSS();
+            updateAll();
+        };
+
+        function initPrintStyle() {
+            if (!document.getElementById('dynamicPrintStyle')) {
+                const styleEl = document.createElement('style');
+                styleEl.id = 'dynamicPrintStyle';
+                document.head.appendChild(styleEl);
+            }
+        }
+
+        function updatePrintCSS() {
+            const styleEl = document.getElementById('dynamicPrintStyle');
+            if (currentMode === 'standard') {
+                styleEl.innerHTML = `
+                    @media print {
+                        @page { size: A4 landscape; margin: 0; }
+                        .a4-page { box-shadow: none; margin: 0; border: none; break-after: page; page-break-after: always; zoom: 1; }
+                        .a4-page:last-child { break-after: auto; page-break-after: auto; }
+                        .page-badge { display: none; }
+                    }
+                `;
+            } else {
+                styleEl.innerHTML = `
+                    @media print {
+                        @page { size: 50mm 30mm; margin: 0; }
+                        .label-box { margin: 0; break-after: page; page-break-after: always; }
+                        .label-box:last-child { break-after: auto; page-break-after: auto; }
+                    }
+                `;
+            }
+        }
+
+        function toggleAdvanced() {
+            els.expandBtn.classList.toggle('expanded');
+            els.advancedSettings.classList.toggle('show');
+            els.expandBtn.querySelector('span').textContent = els.expandBtn.classList.contains('expanded') ? '收合設定' : '更多設定';
+        }
+
+        function bindToggle(btn, key) {
+            btn.addEventListener('click', () => {
+                state[key] = !state[key];
+                btn.classList.toggle('active', state[key]);
+                updateAll();
+                saveSettings();
+            });
+        }
+
+        function bindGroup(btn, key, val, group) {
+            btn.addEventListener('click', () => {
+                state[key] = val;
+                group.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                updateAll();
+                saveSettings();
+            });
+        }
+
+        function clearData() {
+            els.data.value = "";
+            togglePlaceholder();
+            updateAll();
+            saveSettings();
+        }
+
+        function resetSettings() {
+            if (confirm('確定要將所有設定重置為預設值嗎？\n(這將會清除所有已儲存的設定並重新載入網頁)')) {
+                localStorage.removeItem('barcode_integrated_settings');
+                location.reload();
+            }
+        }
+
+        function saveSettings() {
+            cachedData[currentMode].text = els.data.value;
+            cachedData[currentMode].width = els.width.value;
+            cachedData[currentMode].height = els.height.value;
+
+            const payload = {
+                mode: currentMode,
+                cachedData: {
+                    standard: { width: cachedData.standard.width, height: cachedData.standard.height },
+                    coucode: { width: cachedData.coucode.width, height: cachedData.coucode.height }
+                },
+                prefix: els.prefix.value,
+                isTemp: els.workerToggle.classList.contains('active'),
+                standardState: state,
+                standardAdvanced: {
+                    fSize: els.fSize.value,
+                    textMargin: els.textMargin.value,
+                    font: els.font.value,
+                    addEnable: els.addTextEnable.checked,
+                    addTextFont: els.addTextFont.value,
+                    addTextSize: els.addTextSize.value,
+                    addTextDist: els.addTextDist.value
+                }
+            };
+            localStorage.setItem('barcode_integrated_settings', JSON.stringify(payload));
+        }
+
+        function loadSavedSettings() {
+            const raw = localStorage.getItem('barcode_integrated_settings');
+            if (!raw) {
+                els.dataPlaceholder.innerHTML = HINT_STANDARD;
+                return;
+            }
+            try {
+                const parsed = JSON.parse(raw);
+                currentMode = parsed.mode || 'standard';
+
+                if (parsed.cachedData) {
+                    if (parsed.cachedData.standard) {
+                        cachedData.standard.width = parsed.cachedData.standard.width || 4;
+                        cachedData.standard.height = parsed.cachedData.standard.height || 250;
+                    }
+                    if (parsed.cachedData.coucode) {
+                        cachedData.coucode.width = parsed.cachedData.coucode.width || 1.3;
+                        cachedData.coucode.height = parsed.cachedData.coucode.height || 40;
+                    }
+                }
+
+                els.data.style.transition = 'none';
+
+                if (currentMode === 'coucode') {
+                    els.modeToggle.classList.add('active');
+                    els.coucodeSettings.style.display = 'block';
+                    els.standardSettings.style.display = 'none';
+                    els.width.min = 1.0; els.width.max = 3.0; els.width.step = 0.1;
+                    els.height.min = 20; els.height.max = 100; els.height.step = 5;
+                    els.data.style.height = '180px';
+                    els.dataPlaceholder.innerHTML = HINT_COUCODE;
+                } else {
+                    els.modeToggle.classList.remove('active');
+                    els.coucodeSettings.style.display = 'none';
+                    els.standardSettings.style.display = 'block';
+                    els.width.min = 1; els.width.max = 10; els.width.step = 1;
+                    els.height.min = 50; els.height.max = 400; els.height.step = 10;
+                    els.data.style.height = '250px';
+                    els.dataPlaceholder.innerHTML = HINT_STANDARD;
+                }
+
+                els.width.value = cachedData[currentMode].width;
+                els.height.value = cachedData[currentMode].height;
+
+                els.prefix.value = parsed.prefix || "RFC";
+                if (parsed.isTemp) els.workerToggle.classList.add('active');
+                else els.workerToggle.classList.remove('active');
+
+                if (parsed.standardState) {
+                    state = parsed.standardState;
+                    els.btnBold.classList.toggle('active', state.isBold);
+                    els.btnItalic.classList.toggle('active', state.isItalic);
+                    els.btnShowText.classList.toggle('active', state.showText);
+                    els.btnAddBold.classList.toggle('active', state.addIsBold);
+                    els.btnAddItalic.classList.toggle('active', state.addIsItalic);
+                    els.btnAddUnderline.classList.toggle('active', state.addIsUnderline);
+                    els.btnAddStrike.classList.toggle('active', state.addIsStrike);
+
+                    [els.posTop, els.posBottom].forEach(b => b.classList.remove('active'));
+                    (state.textPosition === 'top' ? els.posTop : els.posBottom).classList.add('active');
+
+                    [els.alignLeft, els.alignCenter, els.alignRight].forEach(b => b.classList.remove('active'));
+                    (state.textAlign === 'left' ? els.alignLeft : state.textAlign === 'right' ? els.alignRight : els.alignCenter).classList.add('active');
+
+                    [els.addPosTop, els.addPosBottom].forEach(b => b.classList.remove('active'));
+                    (state.addPos === 'top' ? els.addPosTop : els.addPosBottom).classList.add('active');
+                }
+
+                if (parsed.standardAdvanced) {
+                    const adv = parsed.standardAdvanced;
+                    els.fSize.value = adv.fSize || 150;
+                    els.textMargin.value = adv.textMargin || 10;
+                    els.font.value = adv.font || "Noto Sans TC";
+                    els.addTextEnable.checked = adv.addEnable || false;
+                    els.addTextInput.value = adv.addTextInput || "";
+                    els.addTextFont.value = adv.addTextFont || "Noto Sans TC";
+                    els.addTextSize.value = adv.addTextSize || 100;
+                    els.addTextDist.value = adv.addTextDist || 20;
+                }
+
+                els.data.value = "";
+
+            } catch (e) {}
+        }
+
+        async function pasteData() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) appendData(text);
+            } catch (err) { alert("無法讀取剪貼簿，錯誤訊息：\n" + err); }
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            if (ext === 'xlsx' || ext === 'xls') {
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+
+                        let outputText = "";
+                        jsonData.forEach(row => {
+                            if (row.length > 0 && row[0] !== undefined) {
+                                outputText += row[0] + (row[1] ? ` ${row[1]}` : "") + "\n";
+                            }
+                        });
+                        appendData(outputText);
+                    } catch (error) { alert("讀取 Excel 失敗，錯誤訊息：\n" + error); }
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                reader.onload = (e) => appendData(e.target.result);
+                reader.readAsText(file);
+            }
+            e.target.value = '';
+        }
+
+        function appendData(text) {
+            const current = els.data.value;
+            const prefix = (current.length > 0 && !current.endsWith('\n')) ? '\n' : '';
+            els.data.value = current + prefix + text;
+            updateAll();
+            togglePlaceholder();
+            saveSettings();
+        }
+
+        function togglePlaceholder() {
+            els.dataPlaceholder.style.display = els.data.value.length > 0 ? 'none' : 'block';
+        }
+
+        function updateAll() {
+            if (currentMode === 'coucode') {
+                els.displays.width.textContent = parseFloat(els.width.value).toFixed(1) + " px";
+            } else {
+                els.displays.width.textContent = parseInt(els.width.value) + " px";
+            }
+            els.displays.height.textContent = els.height.value + " px";
+            els.displays.fSize.textContent = els.fSize.value + " px";
+            els.displays.textMargin.textContent = els.textMargin.value + " px";
+            els.displays.addTextSize.textContent = els.addTextSize.value + " px";
+            els.displays.addTextDist.textContent = els.addTextDist.value + " px";
+
+            generateBarcodes();
+        }
+
+        function generateBarcodes() {
+            const inputData = els.data.value;
+            els.container.innerHTML = '';
+            els.validationWarning.style.display = 'none';
+
+            let lines = inputData.split('\n');
+            if (lines.length > 500) lines = lines.slice(0, 500);
+
+            let validCount = 0;
+            let errorCount = 0;
+
+            if (currentMode === 'standard') {
+                let fontOpts = [];
+                if (state.isBold) fontOpts.push("bold");
+                if (state.isItalic) fontOpts.push("italic");
+
+                const settings = {
+                    width: parseInt(els.width.value),
+                    height: parseInt(els.height.value),
+                    fontSize: parseInt(els.fSize.value),
+                    textMargin: parseInt(els.textMargin.value),
+                    font: els.font.value,
+                    fontOptions: fontOpts.join(" "),
+                    displayValue: state.showText,
+                    textPosition: state.textPosition,
+                    textAlign: state.textAlign,
+                    addEnable: els.addTextEnable.checked,
+                    addContent: els.addTextInput.value,
+                    addFont: els.addTextFont.value,
+                    addSize: parseInt(els.addTextSize.value),
+                    addDist: parseInt(els.addTextDist.value),
+                    addPos: state.addPos,
+                    addWeight: state.addIsBold ? 'bold' : 'normal',
+                    addStyle: state.addIsItalic ? 'italic' : 'normal',
+                    addDecor: (state.addIsUnderline ? 'underline ' : '') + (state.addIsStrike ? 'line-through' : '')
+                };
+
+                let pageCount = 1;
+
+                lines.forEach(line => {
+                    const text = line.trim();
+                    if (text) {
+                        const cleanText = text.replace(/[«»]/g, '');
+                        const parts = cleanText.split(/\s+/);
+                        const code = parts[0];
+                        const lineName = parts.length > 1 ? parts.slice(1).join(' ') : '';
+
+                        validCount++;
+                        const page = document.createElement('div');
+                        page.className = 'a4-page';
+
+                        const badge = document.createElement('div');
+                        badge.className = 'page-badge';
+                        badge.innerHTML = `<i class="fas fa-file"></i> Page ${pageCount++}`;
+                        page.appendChild(badge);
+
+                        const wrapper = document.createElement('div');
+                        wrapper.style.display = 'flex';
+                        wrapper.style.flexDirection = 'column';
+                        wrapper.style.alignItems = 'center';
+                        wrapper.style.width = '100%';
+
+                        let finalAddContent = "";
+                        if (settings.addEnable) {
+                            if (settings.addContent && settings.addContent.trim() !== "") {
+                                finalAddContent = settings.addContent;
+                            } else {
+                                finalAddContent = lineName;
+                            }
+                        }
+
+                        let extraDiv = null;
+                        if(finalAddContent !== "") {
+                            extraDiv = document.createElement('div');
+                            extraDiv.className = 'additional-text';
+                            extraDiv.textContent = finalAddContent;
+                            extraDiv.style.fontFamily = settings.addFont;
+                            extraDiv.style.fontSize = settings.addSize + 'px';
+                            extraDiv.style.fontWeight = settings.addWeight;
+                            extraDiv.style.fontStyle = settings.addStyle;
+                            extraDiv.style.textDecoration = settings.addDecor.trim();
+
+                            if(settings.addPos === 'top') extraDiv.style.marginBottom = settings.addDist + 'px';
+                            else extraDiv.style.marginTop = settings.addDist + 'px';
+                        }
+
+                        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                        try {
+                            JsBarcode(svg, code, {
+                                format: "CODE128",
+                                lineColor: "#000",
+                                width: settings.width,
+                                height: settings.height,
+                                displayValue: settings.displayValue,
+                                fontSize: settings.fontSize,
+                                fontOptions: settings.fontOptions,
+                                font: settings.font,
+                                textMargin: settings.textMargin,
+                                textPosition: settings.textPosition,
+                                textAlign: settings.textAlign,
+                                margin: 10,
+                                marginBottom: 10
+                            });
+                        } catch (e) { }
+
+                        if(settings.addEnable && settings.addPos === 'top' && extraDiv) {
+                            wrapper.appendChild(extraDiv);
+                            wrapper.appendChild(svg);
+                        } else if(settings.addEnable && settings.addPos === 'bottom' && extraDiv) {
+                            wrapper.appendChild(svg);
+                            wrapper.appendChild(extraDiv);
+                        } else {
+                            wrapper.appendChild(svg);
+                        }
+
+                        page.appendChild(wrapper);
+                        els.container.appendChild(page);
+                    }
+                });
+            } else {
+                const prefixValue = els.prefix.value.trim();
+
+                lines.forEach(line => {
+                    const text = line.trim();
+                    if (text) {
+                        const cleanText = text.replace(/[«»]/g, '');
+                        const parts = cleanText.split(/\s+/);
+                        const code = parts[0];
+                        const name = parts.length > 1 ? parts.slice(1).join(' ') : '';
+
+                        if (!/^[A-Za-z0-9\-_]+$/.test(code)) {
+                            errorCount++;
+                            return;
+                        }
+
+                        validCount++;
+
+                        const box = document.createElement('div');
+                        box.className = 'label-box';
+
+                        const topDiv = document.createElement('div');
+                        topDiv.className = 'label-top';
+                        topDiv.textContent = `${prefixValue} ${name}`.trim();
+
+                        const midDiv = document.createElement('div');
+                        midDiv.className = 'label-barcode';
+
+                        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                        svg.setAttribute("shape-rendering", "crispEdges");
+
+                        try {
+                            JsBarcode(svg, code, {
+                                format: "CODE128",
+                                lineColor: "#000",
+                                width: parseFloat(els.width.value),
+                                height: parseInt(els.height.value),
+                                displayValue: false,
+                                margin: 0
+                            });
+                        } catch (e) { return; }
+
+                        midDiv.appendChild(svg);
+
+                        const bottomDiv = document.createElement('div');
+                        bottomDiv.className = 'label-bottom';
+                        bottomDiv.textContent = code;
+
+                        box.appendChild(topDiv);
+                        box.appendChild(midDiv);
+                        box.appendChild(bottomDiv);
+
+                        els.container.appendChild(box);
+                    }
+                });
+            }
+
+            els.lineCount.textContent = `${validCount} 筆資料已輸入`;
+            els.lineCount.style.color = validCount > 0 ? 'var(--success-color)' : 'var(--text-secondary)';
+
+            if (currentMode === 'coucode' && errorCount > 0) {
+                els.validationWarning.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>偵測到 ${errorCount} 筆無效資料（條碼包含中文字或特殊符號），已自動忽略。</span>`;
+                els.validationWarning.style.display = 'flex';
+            }
+
+            els.btnPrint.disabled = (validCount === 0);
+
+            if (els.container.innerHTML === '') {
+                els.container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>等待輸入 ...</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
